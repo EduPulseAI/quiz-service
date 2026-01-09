@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "properties": {
+    "skill_tag": {
+      "type": "object",
+      "properties": {
+        "skill": {"type": "string"},
+        "tag": {"type": "string"}
+      },
+      "required": ["skill", "tag"]
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "question_text": {"type": "string"},
+          "difficulty_level": {"type": "string", "enum": ["BEGINNER", "EASY", "INTERMEDIATE", "HARD", "ADVANCED"]},
+          "answer_choices": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "string"},
+                "correct": {"type":  "boolean"}
+              },
+              "required": ["value", "correct"]
+            }
+          },
+          "explanation": {"type": "string"}
+        },
+        "required": ["question_text", "difficulty_level", "answer_choices", "explanation"]
+      }
+    }
+  },
+  "required": ["skill_tag", "questions"]
+}

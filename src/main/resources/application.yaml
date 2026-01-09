@@ -1,9 +1,15 @@
 app:
+  async:
+    core-pool-size: 8
+    max-pool-size: 16
+    queue-capacity: 100
+    thread-name-prefix: question-gen-
   kafka:
     partitions: 1
     topics:
-      appTopic: quiz-service-events
-    replicas: 1
+      answer: quiz.answers
+      session: session.events
+    replicas: 3
   open-api:
     description: @project.description@
     title: @project.name@
@@ -25,36 +31,25 @@ spring:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:quiz_service}
     username: ${DATABASE_USER:default}
   kafka:
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username='${KAFKA_API_KEY}' password='${KAFKA_API_SECRET}';
+      basic.auth.credentials.source: USER_INFO
+      schema.registry.basic.auth.user.info: ${SCHEMA_REGISTRY_API_KEY}:${SCHEMA_REGISTRY_API_SECRET}
+      schema.registry.url: ${SCHEMA_REGISTRY_URL}
     producer:
       retries: 10
       acks: all
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
-        delivery:
-          timeout: 60000
-        request:
-          timeout:
-            ms: 30000
-        linger:
-          ms: 0
-        max:
-          inflight:
-            requests:
-              per:
-                connection: 5
-        enable:
-          idempotence: true
+        delivery.timeout: 60000
+        request.timeout.ms: 30000
+        linger.ms: 0
+        max.inflight.requests.per.connection: 5
+        enable.idempotence: true
     bootstrap-servers: ${BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      group-id: quiz-service-group
-      properties:
-        spring:
-          json:
-            trusted:
-              packages: xyz.catuns.edupulse.quiz.*
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   profiles:
     active: dev
   jpa:
@@ -62,3 +57,15 @@ spring:
       hibernate:
         format_sql: true
         show_sql: false
+  ai.vertex.ai:
+    gemini:
+      chat:
+        options:
+          model: ${GEMINI_MODEL:gemini-2.5-flash}
+          response-mime-type: application/json
+      project-id: ${GCP_PROJECT_ID:edupulse-483220}
+      location: ${GCP_REGION:us-central1}
+      # credentials-uri is optional - if not set, uses Application Default Credentials (ADC)
+      # For Cloud Run: ADC is automatic via service account
+      # For local dev: use 'gcloud auth application-default login' or set GOOGLE_APPLICATION_CREDENTIALS
+      credentials-uri: ${VERTEX_AI_CREDENTIALS_URI:}

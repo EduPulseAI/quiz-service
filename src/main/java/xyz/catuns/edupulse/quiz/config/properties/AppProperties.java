@@ -16,4 +16,10 @@ public class AppProperties {
 	@NestedConfigurationProperty
 	private KafkaTopicProperties kafka = new KafkaTopicProperties();
 
+    /*
+     * Async Properties
+     */
+    @NestedConfigurationProperty
+    private AsyncProperties async = new AsyncProperties();
+
 }

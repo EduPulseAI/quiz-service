@@ -12,7 +12,7 @@
 	<groupId>xyz.catuns.edupulse</groupId>
 	<artifactId>quiz-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>quiz-service</name>
+	<name>EduPulse - Quiz</name>
 	<description>quiz-service</description>
 
 	<url/>

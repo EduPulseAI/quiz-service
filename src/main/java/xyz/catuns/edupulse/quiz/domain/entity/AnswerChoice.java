@@ -20,7 +20,7 @@ public class AnswerChoice extends BaseEntity {
     @JoinColumn(name = "question_id")
     private Question question;
 
-    boolean isCorrect() {
+    public boolean isCorrect() {
         return this.question.getCorrectAnswer().equals(this);
     }
 }

@@ -13,3 +13,5 @@ logging:
       catuns:
         edupulse:
           quiz: debug
+server:
+  port: 8081

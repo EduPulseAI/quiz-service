@@ -3,13 +3,11 @@ package xyz.catuns.edupulse.quiz.domain.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.kafka.common.internals.Topic;
 
 import java.util.HashSet;
 import java.util.Set;
 
 import static jakarta.persistence.CascadeType.*;
-import static jakarta.persistence.CascadeType.PERSIST;
 
 @Getter
 @Setter
@@ -48,12 +46,12 @@ public class Question extends BaseEntity {
         choices.forEach(this::addAnswerChoice);
     }
 
-    private void addAnswerChoice(AnswerChoice answerChoice) {
+    public void addAnswerChoice(AnswerChoice answerChoice) {
         answerChoice.setQuestion(this);
         this.answerChoices.add(answerChoice);
     }
 
-    void setCorrectAnswer(AnswerChoice answerChoice) {
+    public void setCorrectAnswer(AnswerChoice answerChoice) {
         if (!this.answerChoices.contains(answerChoice)) {
             this.addAnswerChoice(answerChoice);
         }

@@ -5,15 +5,17 @@ import lombok.Getter;
 @Getter
 public enum DifficultyLevel {
 
-    BEGINNER(1),
-    EASY(2),
-    INTERMEDIATE(3),
-    HARD(4),
-    ADVANCED(5);
+    BEGINNER(1, "Beginner (foundational concepts)"),
+    EASY(2, "Easy (basic application)"),
+    INTERMEDIATE(3, "Intermediate (requires analysis)"),
+    HARD(4, "Hard (complex problem-solving)"),
+    ADVANCED(5, "Advanced (expert-level synthesis)");
 
     private final int levelValue;
+    private final String description;
 
-    DifficultyLevel(int levelValue) {
+    DifficultyLevel(int levelValue, String description) {
         this.levelValue = levelValue;
+        this.description = description;
     }
 }
