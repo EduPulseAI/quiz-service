@@ -50,8 +50,9 @@ CRITICAL OUTPUT REQUIREMENTS:
    - Ensure each generated question is unique and covers different aspects
 
 6) Skill Tag
-   - Generate the skill_tag based on the topic and context provided.
-   - For example, for algebra topics, use skill='mathematics' and tag='algebra-basics' or similar.
+   - skill MUST be {topic}
+   - Generate the tag based on the topic and context provided.
+   - For example, for topic mathematics, skillTags=[algebra], use skill='Mathematics' and tag='algebra-basics,' or similar.
 
 DIFFICULTY LEVEL GUIDELINES:
 - BEGINNER (foundational concepts)
