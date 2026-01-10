@@ -4,9 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record GeminiSkillTag(
         @JsonProperty("skill")
-        String skill,
-
-        @JsonProperty("tag")
-        String tag
+        String skill
 ) {
 }

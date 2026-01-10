@@ -35,6 +35,9 @@ public class Question extends BaseEntity {
     @JoinColumn(name = "skill_tag_id")
     private SkillTag skillTag;
 
+    @Column(name = "tag")
+    private String tag;
+
     @Column(name = "explanation", columnDefinition = "TEXT")
     private String explanation;
 

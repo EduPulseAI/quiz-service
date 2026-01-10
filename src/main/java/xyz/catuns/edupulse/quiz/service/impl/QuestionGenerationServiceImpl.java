@@ -2,7 +2,6 @@ package xyz.catuns.edupulse.quiz.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -10,10 +9,11 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import xyz.catuns.edupulse.quiz.domain.dto.question.QuestionResponse;
-import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestionResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.question.GenerateQuestionsRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.question.GenerateQuestionsResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.question.QuestionResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestion;
+import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestionResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.skilltag.SkillTagResponse;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
 import xyz.catuns.edupulse.quiz.domain.entity.SkillTag;
@@ -27,6 +27,7 @@ import xyz.catuns.edupulse.quiz.service.QuestionGenerationService;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -85,10 +86,14 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
     private List<Question> persistQuestions(GeminiQuestionResponse geminiResponse) {
         log.debug("Persisting {} questions to database", geminiResponse.questions().size());
 
+        Set<String> tags = geminiResponse.questions().stream()
+                .map(GeminiQuestion::tag)
+                .map(SkillTagMapper.slug)
+                .collect(Collectors.toSet());
         // Find or create skill tag
         SkillTag skillTag = findOrCreateSkillTag(
                 geminiResponse.skillTag().skill(),
-                geminiResponse.skillTag().tag()
+                tags
         );
 
         // Map and persist questions
@@ -99,14 +104,15 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
         return questionRepository.saveAll(questions);
     }
 
-    private SkillTag findOrCreateSkillTag(String skill, String tag) {
-        return skillTagRepository.findBySkillAndTag(skill, tag)
+    private SkillTag findOrCreateSkillTag(String skill, Set<String> tags) {
+        SkillTag skillTag = skillTagRepository.findBySkill(skill)
                 .orElseGet(() -> {
                     SkillTag newTag = new SkillTag();
                     newTag.setSkill(skill);
-                    newTag.setTag(tag);
-                    return skillTagRepository.save(newTag);
+                    return newTag;
                 });
+        skillTag.getTags().addAll(tags);
+        return skillTagRepository.save(skillTag);
     }
 
     private GeminiQuestionResponse generateQuestionsFromAI(GenerateQuestionsRequest request) throws JsonProcessingException {

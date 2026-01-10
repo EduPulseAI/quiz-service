@@ -7,5 +7,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface SkillTagRepository extends JpaRepository<SkillTag, UUID> {
-    Optional<SkillTag> findBySkillAndTag(String skill, String tag);
+    Optional<SkillTag> findBySkill(String skill);
 }

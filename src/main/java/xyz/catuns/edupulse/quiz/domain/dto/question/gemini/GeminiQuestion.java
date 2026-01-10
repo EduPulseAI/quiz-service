@@ -16,6 +16,9 @@ public record GeminiQuestion(
         List<GeminiAnswerChoice> answerChoices,
 
         @JsonProperty("explanation")
-        String explanation
+        String explanation,
+
+        @JsonProperty("tag")
+        String tag
 ) {
 }

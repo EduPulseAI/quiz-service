@@ -5,23 +5,22 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
 @Entity
 @Table(name = "skill_tags",
-    uniqueConstraints = @UniqueConstraint(
-            name = "uc_skill_tag",
-            columnNames = {"skill", "tag"}),
     indexes = @Index(name = "idx_skill_skill_tag", columnList = "skill"))
 public class SkillTag extends BaseEntity {
 
-    @Column(name = "skill", nullable = false)
+    @Column(name = "skill", unique = true, nullable = false)
     private String skill;
 
-    @Column(name = "tag", nullable = false)
-    private String tag;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private final Set<String> tags = new HashSet<>();
 
     @OneToMany(mappedBy = "skillTag")
     private final List<Question> questions = new ArrayList<>();

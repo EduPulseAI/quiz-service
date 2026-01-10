@@ -30,4 +30,12 @@ public class StudentProgress {
     private Instant lastUpdated;
 
 
+    public void incrementCorrectAttempt() {
+        this.questionsAttempted++;
+        this.questionsCorrect++;
+    }
+
+    public void incrementAttempt() {
+        this.questionsAttempted++;
+    }
 }

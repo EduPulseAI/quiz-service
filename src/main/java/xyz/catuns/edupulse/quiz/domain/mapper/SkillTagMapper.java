@@ -4,7 +4,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 import xyz.catuns.edupulse.quiz.domain.dto.skilltag.CreateSkillTagRequest;
-import xyz.catuns.edupulse.quiz.domain.dto.skilltag.CreateSkillTagResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.skilltag.SkillTagResponse;
 import xyz.catuns.edupulse.quiz.domain.entity.SkillTag;
 
@@ -20,25 +19,24 @@ import static org.mapstruct.ReportingPolicy.IGNORE;
     unmappedTargetPolicy = IGNORE)
 public interface SkillTagMapper {
 
+    Function<String, String> slug = (text) -> text.replaceAll("\\W+", "-")
+            .toLowerCase();
+
     @Mapping(target = "questions", ignore = true)
     @Mapping(target = "skill", source = "skill")
-    @Mapping(target = "tag", source = "tag")
+    @Mapping(target = "tags", ignore = true)
     SkillTag toEntity(CreateSkillTagRequest request);
 
     @Named("asDisplayName")
     default String asDisplayName(SkillTag skillTag) {
-        Function<String, String> slug = (text) ->
-             text.replaceAll("\\W+", "-")
-                     .toLowerCase();
-
         return slug.apply(skillTag.getSkill()) + "." +
-                slug.apply(skillTag.getTag());
+                slug.apply(String.join(",", skillTag.getTags()));
 
     }
 
     @Mapping(target = "skillTagId", source = "id")
     @Mapping(target = "skill", source = "skill")
-    @Mapping(target = "tag", source = "tag")
+    @Mapping(target = "tags", source = "tags")
     @Mapping(target = "displayName", source = ".", qualifiedByName = "asDisplayName")
     SkillTagResponse toResponse(SkillTag skillTag);
 }

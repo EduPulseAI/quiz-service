@@ -26,6 +26,8 @@ public interface QuestionMapper {
     @Mapping(target = "questionId", source = "id")
     @Mapping(target = "text", source = "questionText")
     @Mapping(target = "choices", source = "answerChoices")
+    @Mapping(target = "difficulty", source = "difficultyLevel")
+    @Mapping(target = "tag", source = "tag")
     QuestionResponse toResponse(Question question);
 
     List<AnswerChoiceResponse> toChoiceListResponse(Set<AnswerChoice> answerChoices);
@@ -40,6 +42,7 @@ public interface QuestionMapper {
     @Mapping(target = "correctAnswer", ignore = true)
     @Mapping(target = "answerChoices", ignore = true)
     @Mapping(target = "skillTag", source = "skillTag")
+    @Mapping(target = "tag", source = "q.tag")
     @Mapping(target = "explanation", source = "q.explanation")
     @Mapping(target = "createdBy", constant = "gemini")
     Question toEntity(GeminiQuestion q, SkillTag skillTag);
