@@ -4,6 +4,6 @@ import java.util.UUID;
 
 public record StartSessionRequest(
         UUID studentId,
-        UUID skillTagId
+        UUID topicId
 ) {
 }

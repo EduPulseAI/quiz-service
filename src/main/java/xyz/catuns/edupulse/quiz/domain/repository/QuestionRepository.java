@@ -14,22 +14,22 @@ public interface QuestionRepository extends JpaRepository<Question, UUID>, JpaSp
 
     @Query(value = """
             SELECT * FROM questions
-        WHERE skill_tag_id = :skillTagId 
+        WHERE topic_id = :topicId 
         ORDER BY RANDOM() 
         LIMIT 1
         """, nativeQuery = true)
-    Optional<Question> findRandomBySkillTagId(@Param("skillTagId") UUID skillTagId);
+    Optional<Question> findRandomByTopicId(@Param("topicId") UUID topicId);
 
     @Query(value = """
             SELECT * FROM questions
-            WHERE skill_tag = :skillTag
+            WHERE topic = :topic
             AND difficulty_level = :difficulty
             AND question_id NOT IN :recentIds
             ORDER BY RANDOM()
             LIMIT 1
             """, nativeQuery = true)
     Optional<Question> findNextQuestion(
-            @Param("skillTagId") UUID skillTagId,
+            @Param("topicId") UUID topicId,
             @Param("difficulty") int difficulty,
             @Param("recentIds") List<String> recentIds
     );

@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public record GeminiQuestionResponse(
-        @JsonProperty("skill_tag")
-        GeminiSkillTag skillTag,
+        @JsonProperty("topic")
+        GeminiTopic topic,
 
         @JsonProperty("questions")
         List<GeminiQuestion> questions

@@ -6,13 +6,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import xyz.catuns.edupulse.quiz.domain.dto.session.SessionResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.session.SessionSearchCriteria;
 import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionResponse;
 import xyz.catuns.edupulse.quiz.service.SessionService;
+
+import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @RestController
@@ -34,5 +36,34 @@ public class SessionController {
     ){
         StartSessionResponse response = sessionService.startSession(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping(value = "")
+    @Operation(
+            summary = "Get All Sessions",
+            description = "REST API Get to Sessions")
+    @ApiResponse(
+            responseCode = "200",
+            description = "HTTP Status OK")
+    public ResponseEntity<List<SessionResponse>> getAllSessions(
+            @ModelAttribute SessionSearchCriteria criteria
+    ){
+
+        List<SessionResponse> response = sessionService.getAllSessions(criteria);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+    @GetMapping(value = "/{id}")
+    @Operation(
+            summary = "Get Session",
+            description = "REST API Get to Session")
+    @ApiResponse(
+            responseCode = "200",
+            description = "HTTP Status OK")
+    public ResponseEntity<SessionResponse> getSession(
+            @PathVariable("id") UUID sessionId
+    ){
+
+        SessionResponse response = sessionService.getSession(sessionId);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

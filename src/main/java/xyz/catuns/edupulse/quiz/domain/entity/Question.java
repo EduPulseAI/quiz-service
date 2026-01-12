@@ -14,7 +14,7 @@ import static jakarta.persistence.CascadeType.*;
 @Entity
 @Table(name = "questions",
         indexes = {
-                @Index(name = "idx_skill_difficulty_question", columnList = "difficulty_level, skill_tag_id")
+                @Index(name = "idx_topic_difficulty_question", columnList = "difficulty_level, topic_id")
         })
 public class Question extends BaseEntity {
 
@@ -32,8 +32,8 @@ public class Question extends BaseEntity {
     private AnswerChoice correctAnswer;
 
     @ManyToOne(cascade = {PERSIST, DETACH, REFRESH, MERGE})
-    @JoinColumn(name = "skill_tag_id")
-    private SkillTag skillTag;
+    @JoinColumn(name = "topic_id")
+    private Topic topic;
 
     @Column(name = "tag")
     private String tag;

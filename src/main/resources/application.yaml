@@ -69,3 +69,6 @@ spring:
       # For Cloud Run: ADC is automatic via service account
       # For local dev: use 'gcloud auth application-default login' or set GOOGLE_APPLICATION_CREDENTIALS
       credentials-uri: ${VERTEX_AI_CREDENTIALS_URI:}
+jwt:
+  security:
+    public-paths: /swagger-ui/**, /v3/api-docs/**, /actuator/health/**, /error/**, /api/students/**

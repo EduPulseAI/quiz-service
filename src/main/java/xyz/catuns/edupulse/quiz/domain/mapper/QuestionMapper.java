@@ -8,7 +8,7 @@ import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestion;
 import xyz.catuns.edupulse.quiz.domain.entity.AnswerChoice;
 import xyz.catuns.edupulse.quiz.domain.entity.DifficultyLevel;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
-import xyz.catuns.edupulse.quiz.domain.entity.SkillTag;
+import xyz.catuns.edupulse.quiz.domain.entity.Topic;
 
 import java.util.List;
 import java.util.Set;
@@ -23,7 +23,7 @@ import static org.mapstruct.ReportingPolicy.IGNORE;
     unmappedTargetPolicy = IGNORE)
 public interface QuestionMapper {
 
-    @Mapping(target = "questionId", source = "id")
+    @Mapping(target = "id", source = "id")
     @Mapping(target = "text", source = "questionText")
     @Mapping(target = "choices", source = "answerChoices")
     @Mapping(target = "difficulty", source = "difficultyLevel")
@@ -41,14 +41,14 @@ public interface QuestionMapper {
     @Mapping(target = "questionText", source = "q.questionText")
     @Mapping(target = "correctAnswer", ignore = true)
     @Mapping(target = "answerChoices", ignore = true)
-    @Mapping(target = "skillTag", source = "skillTag")
+    @Mapping(target = "topic", source = "topic")
     @Mapping(target = "tag", source = "q.tag")
     @Mapping(target = "explanation", source = "q.explanation")
     @Mapping(target = "createdBy", constant = "gemini")
-    Question toEntity(GeminiQuestion q, SkillTag skillTag);
+    Question toEntity(GeminiQuestion q, Topic topic);
 
     @AfterMapping
-    default void setCorrectAnswer(@MappingTarget Question target, GeminiQuestion q, SkillTag skillTag) {
+    default void setCorrectAnswer(@MappingTarget Question target, GeminiQuestion q, Topic topic) {
         for (GeminiAnswerChoice geminiAnswerChoice : q.answerChoices()) {
             AnswerChoice choice = this.toAnswerChoice(geminiAnswerChoice);
             target.addAnswerChoice(choice);

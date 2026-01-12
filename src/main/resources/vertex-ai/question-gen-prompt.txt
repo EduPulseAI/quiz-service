@@ -49,7 +49,7 @@ CRITICAL OUTPUT REQUIREMENTS:
    - Do NOT generate questions similar to the existing questions listed above
    - Ensure each generated question is unique and covers different aspects
 
-6) Skill Tag
+6) Topic
    - skill MUST be {topic}
    - Generate tag for each question based on the topic, context provided, and question relevance.
    - For example, for topic mathematics, question.tag=[algebra], use skill='Mathematics' or similar.

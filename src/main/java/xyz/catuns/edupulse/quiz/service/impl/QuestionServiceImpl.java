@@ -7,7 +7,7 @@ import xyz.catuns.edupulse.quiz.domain.dto.question.QuestionResponse;
 import xyz.catuns.edupulse.quiz.domain.entity.DifficultyLevel;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
 import xyz.catuns.edupulse.quiz.domain.entity.Session;
-import xyz.catuns.edupulse.quiz.domain.entity.SkillTag;
+import xyz.catuns.edupulse.quiz.domain.entity.Topic;
 import xyz.catuns.edupulse.quiz.domain.mapper.QuestionMapper;
 import xyz.catuns.edupulse.quiz.domain.repository.QuestionRepository;
 import xyz.catuns.edupulse.quiz.domain.repository.SessionRepository;
@@ -44,7 +44,7 @@ public class QuestionServiceImpl implements QuestionService {
         }
 
         Question nextQuestion = findNextQuestion(
-                lastQuestion.getSkillTag(),
+                lastQuestion.getTopic(),
                 lastQuestion.getDifficultyLevel(),
                 recentIds);
 
@@ -61,16 +61,16 @@ public class QuestionServiceImpl implements QuestionService {
         return questionMapper.toResponse(nextQuestion);
     }
 
-    private Question findNextQuestion(SkillTag skillTag, DifficultyLevel difficultyLevel, List<String> recentIds) {
+    private Question findNextQuestion(Topic topic, DifficultyLevel difficultyLevel, List<String> recentIds) {
         return questionRepository
                 .findNextQuestion(
-                        skillTag.getId(),
+                        topic.getId(),
                         difficultyLevel.ordinal(),
                         recentIds)
                 .orElseThrow(() -> new NotFoundException(
                         "No next question for skill %s and difficulty %s "
                                 .formatted(
-                                        skillTag.getSkill(),
+                                        topic.getSkill(),
                                         difficultyLevel.getDescription())));
     }
 }

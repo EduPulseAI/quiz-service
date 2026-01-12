@@ -17,18 +17,18 @@ public class StudentProgressId implements Serializable {
     @Column(name = "student_id")
     private UUID studentId;
 
-    @Column(name = "skill_tag_id")
-    private UUID skillTagId;
+    @Column(name = "topic_id")
+    private UUID topicId;
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         StudentProgressId that = (StudentProgressId) o;
-        return Objects.equals(studentId, that.studentId) && Objects.equals(skillTagId, that.skillTagId);
+        return Objects.equals(studentId, that.studentId) && Objects.equals(topicId, that.topicId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(studentId, skillTagId);
+        return Objects.hash(studentId, topicId);
     }
 }

@@ -1,7 +1,7 @@
 {
   "type": "object",
   "properties": {
-    "skill_tag": {
+    "topic": {
       "type": "object",
       "properties": {
         "skill": {"type": "string"},
@@ -35,5 +35,5 @@
       }
     }
   },
-  "required": ["skill_tag", "questions"]
+  "required": ["topic", "questions"]
 }

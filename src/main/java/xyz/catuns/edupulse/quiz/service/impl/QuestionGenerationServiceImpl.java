@@ -12,22 +12,20 @@ import org.springframework.stereotype.Service;
 import xyz.catuns.edupulse.quiz.domain.dto.question.GenerateQuestionsRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.question.GenerateQuestionsResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.question.QuestionResponse;
-import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestion;
 import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestionResponse;
-import xyz.catuns.edupulse.quiz.domain.dto.skilltag.SkillTagResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.topic.TopicResponse;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
-import xyz.catuns.edupulse.quiz.domain.entity.SkillTag;
+import xyz.catuns.edupulse.quiz.domain.entity.Topic;
 import xyz.catuns.edupulse.quiz.domain.mapper.QuestionMapper;
-import xyz.catuns.edupulse.quiz.domain.mapper.SkillTagMapper;
+import xyz.catuns.edupulse.quiz.domain.mapper.TopicMapper;
 import xyz.catuns.edupulse.quiz.domain.repository.QuestionRepository;
-import xyz.catuns.edupulse.quiz.domain.repository.SkillTagRepository;
+import xyz.catuns.edupulse.quiz.domain.repository.TopicRepository;
 import xyz.catuns.edupulse.quiz.exception.GeminiGenerationException;
 import xyz.catuns.edupulse.quiz.service.QuestionGenerationService;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -39,10 +37,10 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
     private final ChatClient chatClient;
     private final PromptTemplate promptTemplate;
     private final QuestionRepository questionRepository;
-    private final SkillTagRepository skillTagRepository;
+    private final TopicRepository topicRepository;
     private final ObjectMapper objectMapper;
     private final QuestionMapper questionMapper;
-    private final SkillTagMapper skillTagMapper;
+    private final TopicMapper topicMapper;
 
     @Override
     @Async("questionGeneratorExecutor")
@@ -74,51 +72,42 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
         }
 
         // Get skill tag from first question (all share the same skill tag)
-        SkillTag skillTag = questions.getFirst().getSkillTag();
+        Topic topic = questions.getFirst().getTopic();
 
-        SkillTagResponse skillTagDto = skillTagMapper.toResponse(skillTag);
+        TopicResponse topicDto = topicMapper.toResponse(topic);
 
         List<QuestionResponse> questionResponses = questionMapper.toResponseList(questions);
 
-        return new GenerateQuestionsResponse(skillTagDto, questionResponses);
+        return new GenerateQuestionsResponse(topicDto, questionResponses);
     }
 
     private List<Question> persistQuestions(GeminiQuestionResponse geminiResponse) {
         log.debug("Persisting {} questions to database", geminiResponse.questions().size());
 
-        Set<String> tags = geminiResponse.questions().stream()
-                .map(GeminiQuestion::tag)
-                .map(SkillTagMapper.slug)
-                .collect(Collectors.toSet());
         // Find or create skill tag
-        SkillTag skillTag = findOrCreateSkillTag(
-                geminiResponse.skillTag().skill(),
-                tags
-        );
+        Topic topic = findOrCreateTopic(geminiResponse.topic().skill());
 
         // Map and persist questions
         List<Question> questions = geminiResponse.questions().stream()
-                .map(q -> questionMapper.toEntity(q, skillTag))
+                .map(q -> questionMapper.toEntity(q, topic))
                 .collect(Collectors.toList());
 
         return questionRepository.saveAll(questions);
     }
 
-    private SkillTag findOrCreateSkillTag(String skill, Set<String> tags) {
-        SkillTag skillTag = skillTagRepository.findBySkill(skill)
+    private Topic findOrCreateTopic(String skill) {
+        return topicRepository.findBySkill(skill)
                 .orElseGet(() -> {
-                    SkillTag newTag = new SkillTag();
-                    newTag.setSkill(skill);
-                    return newTag;
+                    Topic topic = new Topic();
+                    topic.setSkill(skill);
+                    return topicRepository.save(topic);
                 });
-        skillTag.getTags().addAll(tags);
-        return skillTagRepository.save(skillTag);
     }
 
     private GeminiQuestionResponse generateQuestionsFromAI(GenerateQuestionsRequest request) throws JsonProcessingException {
         // Create output converter for structured JSON response
         BeanOutputConverter<GeminiQuestionResponse> outputConverter =
-                new BeanOutputConverter<>(GeminiQuestionResponse.class);
+                new BeanOutputConverter<>(GeminiQuestionResponse.class, objectMapper);
 
         // Build prompt parameters
         Map<String, Object> promptParams = buildPromptParameters(request, outputConverter);
@@ -140,7 +129,7 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
         log.debug("Received response from Vertex AI, parsing structured output \n{}", response);
 
         // Convert JSON response to strongly-typed object
-        return objectMapper.readValue(response, GeminiQuestionResponse.class);
+        return outputConverter.convert(response);
     }
 
     private Map<String, Object> buildPromptParameters(GenerateQuestionsRequest request, BeanOutputConverter<GeminiQuestionResponse> outputConverter) {

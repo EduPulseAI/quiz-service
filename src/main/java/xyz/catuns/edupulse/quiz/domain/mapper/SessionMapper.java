@@ -6,11 +6,13 @@ import org.mapstruct.Named;
 import org.springframework.beans.factory.annotation.Value;
 import xyz.catuns.edupulse.common.messaging.events.EventEnvelope;
 import xyz.catuns.edupulse.common.messaging.events.session.SessionEvent;
+import xyz.catuns.edupulse.quiz.domain.dto.session.SessionResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionResponse;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
 import xyz.catuns.edupulse.quiz.domain.entity.Session;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.mapstruct.InjectionStrategy.CONSTRUCTOR;
@@ -44,7 +46,7 @@ public abstract class SessionMapper {
     @Mapping(target = "startedAt", expression = "java(session.getStartedAt().toEpochMilli())")
     @Mapping(target = "initialDifficulty", source = "currentDifficulty")
     @Mapping(target = "firstQuestion", source = "currentQuestion")
-    public abstract StartSessionResponse toResponse(Session session);
+    public abstract StartSessionResponse toStartSessionResponse(Session session);
 
     public SessionEvent toSessionEvent(Session session) {
         EventEnvelope eventEnvelope = buildEventEnvelope(session);
@@ -65,4 +67,13 @@ public abstract class SessionMapper {
                 .setSessionId(session.getId().toString())
                 .build();
     }
+
+    public abstract List<SessionResponse> toResponseList(List<Session> all);
+
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "studentId", source = "studentId")
+    @Mapping(target = "currentQuestion", source = "currentQuestion")
+    @Mapping(target = "currentDifficulty", source = "currentDifficulty")
+    @Mapping(target = "status", source = "status")
+    public abstract SessionResponse toResponse(Session session);
 }

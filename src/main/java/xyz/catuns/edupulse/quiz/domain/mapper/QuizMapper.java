@@ -19,6 +19,7 @@ import java.util.UUID;
 import static org.mapstruct.InjectionStrategy.CONSTRUCTOR;
 import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 import static org.mapstruct.ReportingPolicy.IGNORE;
+import static xyz.catuns.edupulse.quiz.utils.NameCaseResolver.toKebabCase;
 
 @Mapper(
         componentModel = SPRING,
@@ -65,9 +66,9 @@ public abstract class QuizMapper {
     }
 
     private String buildSkillTag(Question question) {
-        return SkillTagMapper.slug.apply(question.getSkillTag().getSkill())
+        return toKebabCase(question.getTopic().getSkill())
                 + "."
-                + SkillTagMapper.slug.apply(question.getTag());
+                + toKebabCase(question.getTag());
     }
 
     @Mapping(target = "isCorrect", source = "quizAnswer.isCorrect")

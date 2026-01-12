@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record QuestionResponse(
-        UUID questionId,
+        UUID id,
         String text,
         DifficultyLevel difficulty,
         List<AnswerChoiceResponse> choices,

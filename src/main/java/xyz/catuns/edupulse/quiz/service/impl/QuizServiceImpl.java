@@ -49,17 +49,17 @@ public class QuizServiceImpl implements QuizService {
 
         updateStudentProgress(
                 request.studentId(),
-                question.getSkillTag().getId(),
+                question.getTopic().getId(),
                 isCorrect);
 
 
         return quizMapper.toResponse(quizAnswer, question);
     }
 
-    private void updateStudentProgress(UUID studentId, UUID skillTagId, boolean isCorrect) {
+    private void updateStudentProgress(UUID studentId, UUID topicId, boolean isCorrect) {
         StudentProgressId id = new StudentProgressId();
         id.setStudentId(studentId);
-        id.setSkillTagId(skillTagId);
+        id.setTopicId(topicId);
 
         StudentProgress studentProgress = studentProgressRepository.findById(id)
                 .orElseGet(() -> {
