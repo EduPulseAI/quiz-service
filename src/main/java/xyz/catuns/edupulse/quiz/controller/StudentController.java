@@ -14,7 +14,7 @@ import xyz.catuns.edupulse.quiz.service.StudentService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/students")
-@Tag(name = "Student api")
+@Tag(name = "Student API")
 public class StudentController {
 
     private final StudentService studentService;

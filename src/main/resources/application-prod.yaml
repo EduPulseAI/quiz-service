@@ -17,3 +17,7 @@ logging:
       catuns:
         edupulse:
           quiz: info
+management:
+  endpoint:
+    health:
+      show-details: never

@@ -16,6 +16,7 @@ import static org.mapstruct.ReportingPolicy.IGNORE;
     unmappedTargetPolicy = IGNORE)
 public interface StudentMapper {
 
+    @Mapping(target = "password", expression = "java(java.util.UUID.randomUUID().toString())")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "name", source = "name")
     @Mapping(target = "email", expression = "java(request.name() + \"@edupulse.com\")")

@@ -25,7 +25,7 @@ public class QuizController {
     @PostMapping(value = "/answer/submit")
     @Operation(
             summary = "Submit Answer",
-            description = "REST API Post to SubmitAnswer")
+            description = "REST API Post Submit Answer")
     @ApiResponse(
             responseCode = "200",
             description = "HTTP Status OK")

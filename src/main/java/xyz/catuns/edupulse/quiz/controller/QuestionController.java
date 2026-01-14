@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/quiz/questions")
-@Tag(name = "Question API - Quiz")
+@Tag(name = "Question API")
 public class QuestionController {
 
     private final QuestionGenerationService questionGenerationService;
@@ -30,7 +30,7 @@ public class QuestionController {
     @PostMapping(value = "/generate")
     @Operation(
             summary = "Generate Questions",
-            description = "REST API Post to GenerateQuestions")
+            description = "REST API Generates Questions")
     @ApiResponse(
             responseCode = "201",
             description = "HTTP Status CREATED")
@@ -44,7 +44,7 @@ public class QuestionController {
     @GetMapping(value = "/next")
     @Operation(
             summary = "Get Next Question",
-            description = "REST API Get to NextQuestion")
+            description = "REST API Get NextQuestion")
     @ApiResponse(
             responseCode = "200",
             description = "HTTP Status OK")

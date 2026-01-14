@@ -71,4 +71,21 @@ spring:
       credentials-uri: ${VERTEX_AI_CREDENTIALS_URI:}
 jwt:
   security:
-    public-paths: /swagger-ui/**, /v3/api-docs/**, /actuator/health/**, /error/**, /api/students/**
+    public-paths: /**
+#    public-paths: /swagger-ui/**, /v3/api-docs/**, /actuator/health/**, /error/**, /api/students/**
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true

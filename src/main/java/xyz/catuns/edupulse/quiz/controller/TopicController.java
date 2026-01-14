@@ -9,11 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import xyz.catuns.edupulse.quiz.domain.dto.topic.CreateTopicRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.topic.TopicResponse;
 import xyz.catuns.edupulse.quiz.service.TopicService;
@@ -21,7 +17,7 @@ import xyz.catuns.edupulse.quiz.service.TopicService;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/quiz/topics")
-@Tag(name = "Topic API - Quiz Service")
+@Tag(name = "Topic API")
 public class TopicController {
 
     private final TopicService topicService;

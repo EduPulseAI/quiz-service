@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.metadata.ChatResponseMetadata;
+import org.springframework.ai.chat.metadata.Usage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.scheduling.annotation.Async;
@@ -23,6 +26,8 @@ import xyz.catuns.edupulse.quiz.domain.repository.TopicRepository;
 import xyz.catuns.edupulse.quiz.exception.GeminiGenerationException;
 import xyz.catuns.edupulse.quiz.service.QuestionGenerationService;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -107,7 +112,7 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
     private GeminiQuestionResponse generateQuestionsFromAI(GenerateQuestionsRequest request) throws JsonProcessingException {
         // Create output converter for structured JSON response
         BeanOutputConverter<GeminiQuestionResponse> outputConverter =
-                new BeanOutputConverter<>(GeminiQuestionResponse.class, objectMapper);
+                new BeanOutputConverter<>(GeminiQuestionResponse.class);
 
         // Build prompt parameters
         Map<String, Object> promptParams = buildPromptParameters(request, outputConverter);
@@ -117,19 +122,33 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
         log.debug("Calling Vertex AI Gemini with prompt for {} questions", request.questionCount());
 
         // Call Vertex AI Gemini
-        String response = chatClient.prompt()
+        Instant start = Instant.now();
+        ChatResponse chatResponse = chatClient.prompt()
                 .user(userSpec -> userSpec.text(promptTemplate.render(promptParams)))
                 .call()
-                .content();
+                .chatResponse();
+
+        long runtimeSeconds = Duration.between(start, Instant.now())
+                .toSeconds();
+        String response = chatResponse.getResult().getOutput().getText();
+
+        // Track tokens
+        ChatResponseMetadata metadata = chatResponse.getMetadata();// Or chatResp.getResult().getMetadata()
+        Usage usage = metadata.getUsage();
+        log.info("Prompt tokens: {}, Completion: {}, Total: {}, Runtime {}s",
+                usage.getPromptTokens(),
+                usage.getCompletionTokens(),
+                usage.getTotalTokens(),
+                runtimeSeconds);
 
         if (response == null || response.isBlank()) {
             throw new GeminiGenerationException("Gemini returned empty response");
         }
 
-        log.debug("Received response from Vertex AI, parsing structured output \n{}", response);
+        log.debug("Received response from Vertex AI, parsing structured output");
 
         // Convert JSON response to strongly-typed object
-        return outputConverter.convert(response);
+        return objectMapper.readValue(response, GeminiQuestionResponse.class);
     }
 
     private Map<String, Object> buildPromptParameters(GenerateQuestionsRequest request, BeanOutputConverter<GeminiQuestionResponse> outputConverter) {

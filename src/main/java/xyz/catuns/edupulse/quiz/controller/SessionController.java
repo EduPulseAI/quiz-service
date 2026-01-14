@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/quiz/sessions")
-@Tag(name = "Quiz - Session API")
+@Tag(name = "Session API")
 public class SessionController {
 
     private final SessionService sessionService;
@@ -27,7 +27,7 @@ public class SessionController {
     @PostMapping(value = "/start")
     @Operation(
             summary = "Start Session",
-            description = "REST API Post to StartSession")
+            description = "Starts Session event")
     @ApiResponse(
             responseCode = "201",
             description = "HTTP Status CREATED")
@@ -41,7 +41,7 @@ public class SessionController {
     @GetMapping(value = "")
     @Operation(
             summary = "Get All Sessions",
-            description = "REST API Get to Sessions")
+            description = "Search for Sessions based on criteria")
     @ApiResponse(
             responseCode = "200",
             description = "HTTP Status OK")
@@ -54,8 +54,8 @@ public class SessionController {
     }
     @GetMapping(value = "/{id}")
     @Operation(
-            summary = "Get Session",
-            description = "REST API Get to Session")
+            summary = "Get Session by session id",
+            description = "REST API to get Session")
     @ApiResponse(
             responseCode = "200",
             description = "HTTP Status OK")
