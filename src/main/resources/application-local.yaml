@@ -1,11 +1,13 @@
 spring:
+  data:
+    redis:
+      host: localhost
+  datasource:
+    url: jdbc:postgresql://localhost:${DATABASE_PORT:5432}/${DATABASE_NAME:quiz_service}
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     defer-datasource-initialization: true
-    properties:
-      hibernate:
-        show_sql: true
   sql:
     init:
       mode: always

@@ -1,9 +1,6 @@
 package xyz.catuns.edupulse.quiz.service;
 
-import xyz.catuns.edupulse.quiz.domain.dto.session.SessionResponse;
-import xyz.catuns.edupulse.quiz.domain.dto.session.SessionSearchCriteria;
-import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionRequest;
-import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.session.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,4 +12,6 @@ public interface SessionService {
     List<SessionResponse> getAllSessions(SessionSearchCriteria criteria);
 
     SessionResponse getSession(UUID sessionId);
+
+    SendSessionEventResponse sendSessionEvent(SendSessionEventRequest request);
 }

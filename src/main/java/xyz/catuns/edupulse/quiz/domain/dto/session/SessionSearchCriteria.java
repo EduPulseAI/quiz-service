@@ -14,10 +14,10 @@ public record SessionSearchCriteria(
 
         @Min(value = 1)
         @Max(value = 5)
-        int minDifficultyLevel,
+        Integer minDifficultyLevel,
 
         @Min(value = 1)
         @Max(value = 5)
-        int maxDifficultyLevel
+        Integer maxDifficultyLevel
 ) {
 }

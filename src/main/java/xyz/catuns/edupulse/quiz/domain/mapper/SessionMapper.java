@@ -6,6 +6,7 @@ import org.mapstruct.Named;
 import org.springframework.beans.factory.annotation.Value;
 import xyz.catuns.edupulse.common.messaging.events.EventEnvelope;
 import xyz.catuns.edupulse.common.messaging.events.session.SessionEvent;
+import xyz.catuns.edupulse.quiz.domain.dto.session.SendSessionEventResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.session.SessionResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionResponse;
@@ -76,4 +77,7 @@ public abstract class SessionMapper {
     @Mapping(target = "currentDifficulty", source = "currentDifficulty")
     @Mapping(target = "status", source = "status")
     public abstract SessionResponse toResponse(Session session);
+
+    @Mapping(target = "eventId", source = "envelope.id")
+    public abstract SendSessionEventResponse toSessionEventResponse(SessionEvent sessionEvent);
 }

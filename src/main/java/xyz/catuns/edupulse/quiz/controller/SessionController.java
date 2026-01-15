@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import xyz.catuns.edupulse.quiz.domain.dto.session.SessionResponse;
-import xyz.catuns.edupulse.quiz.domain.dto.session.SessionSearchCriteria;
-import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionRequest;
-import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.session.*;
 import xyz.catuns.edupulse.quiz.service.SessionService;
 
 import java.util.List;
@@ -52,6 +49,7 @@ public class SessionController {
         List<SessionResponse> response = sessionService.getAllSessions(criteria);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
     @GetMapping(value = "/{id}")
     @Operation(
             summary = "Get Session by session id",
@@ -65,5 +63,19 @@ public class SessionController {
 
         SessionResponse response = sessionService.getSession(sessionId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @PostMapping(value = "/event")
+    @Operation(
+            summary = "Send Session Event",
+            description = "REST API Post to SendSessionEvent")
+    @ApiResponse(
+            responseCode = "202",
+            description = "HTTP Status ACCEPTED")
+    public ResponseEntity<SendSessionEventResponse> sendSessionEvent(
+            @RequestBody SendSessionEventRequest request
+    ) {
+        SendSessionEventResponse response = sessionService.sendSessionEvent(request);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 }

@@ -32,9 +32,12 @@ spring:
     username: ${DATABASE_USER:default}
   kafka:
     properties:
+      # Confluent Security
       security.protocol: SASL_SSL
       sasl.mechanism: PLAIN
       sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username='${KAFKA_API_KEY}' password='${KAFKA_API_SECRET}';
+
+      #Schema Registry
       basic.auth.credentials.source: USER_INFO
       schema.registry.basic.auth.user.info: ${SCHEMA_REGISTRY_API_KEY}:${SCHEMA_REGISTRY_API_SECRET}
       schema.registry.url: ${SCHEMA_REGISTRY_URL}

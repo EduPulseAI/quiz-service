@@ -37,9 +37,9 @@ public final class SessionSpecification {
         return spec;
     }
 
-    private static Specification<Session> hasDifficultyBetween(int min, int max) {
+    private static Specification<Session> hasDifficultyBetween(Integer min, Integer max) {
         return (root, query, cb) -> {
-            Path<Integer> levelPath = root.get("difficulty").get("levelValue");
+            Path<Integer> levelPath = root.get("currentDifficulty").get("levelValue");
             return cb.between(levelPath, min, max);
         };
     }

@@ -125,16 +125,14 @@
 		</plugins>
 	</build>
 	<repositories>
-		<repository>
-			<id>base-starter</id>
-			<name>base-starter</name>
-			<url>https://maven.pkg.github.com/catuns-spring-boot/spring-boot-base</url>
-		</repository>
-		<repository>
-			<id>jwt-starter</id>
-			<name>jwt-starter</name>
-			<url>https://maven.pkg.github.com/catuns-spring-boot/spring-boot-base</url>
-		</repository>
+        <repository>
+            <id>repolite-releases</id>
+            <name>Catuns lite Repository</name>
+            <url>https://repolite.catuns.xyz/releases</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
 	</repositories>
 
 </project>

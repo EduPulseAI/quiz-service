@@ -4,10 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import xyz.catuns.edupulse.common.messaging.events.session.SessionEvent;
-import xyz.catuns.edupulse.quiz.domain.dto.session.SessionResponse;
-import xyz.catuns.edupulse.quiz.domain.dto.session.SessionSearchCriteria;
-import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionRequest;
-import xyz.catuns.edupulse.quiz.domain.dto.session.StartSessionResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.session.*;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
 import xyz.catuns.edupulse.quiz.domain.entity.Session;
 import xyz.catuns.edupulse.quiz.domain.entity.Topic;
@@ -71,5 +68,15 @@ public class SessionServiceImpl implements SessionService {
                 .orElseThrow(() -> new NotFoundException("No session with id"));
 
         return mapper.toResponse(session);
+    }
+
+    @Override
+    public SendSessionEventResponse sendSessionEvent(SendSessionEventRequest request) {
+        Session session = repository.findById(request.sessionId())
+                .orElseThrow(() -> new NotFoundException("No session with id"));
+        session.setStatus(request.eventType());
+        SessionEvent sessionEvent = mapper.toSessionEvent(session);
+        producer.publishSessionEvent(sessionEvent);
+        return mapper.toSessionEventResponse(sessionEvent);
     }
 }
