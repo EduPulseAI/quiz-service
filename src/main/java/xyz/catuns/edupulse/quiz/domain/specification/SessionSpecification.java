@@ -4,6 +4,7 @@ import jakarta.persistence.criteria.Path;
 import org.springframework.data.jpa.domain.Specification;
 import xyz.catuns.edupulse.common.messaging.events.session.SessionEventType;
 import xyz.catuns.edupulse.quiz.domain.dto.session.SessionSearchCriteria;
+import xyz.catuns.edupulse.quiz.domain.entity.DifficultyLevel;
 import xyz.catuns.edupulse.quiz.domain.entity.Session;
 
 import java.util.List;
@@ -17,7 +18,7 @@ public final class SessionSpecification {
         Specification<Session> spec = Specification.unrestricted();
 
         // difficulty between min and max (always present in your record)
-        spec = spec.and(hasDifficultyBetween(criteria.minDifficultyLevel(), criteria.maxDifficultyLevel()));
+//        spec = spec.and(hasDifficultyBetween(criteria.minDifficultyLevel(), criteria.maxDifficultyLevel()));
 
         // filter by student id (only if not null)
         if (criteria.studentId() != null) {
@@ -37,9 +38,9 @@ public final class SessionSpecification {
         return spec;
     }
 
-    private static Specification<Session> hasDifficultyBetween(Integer min, Integer max) {
+    private static Specification<Session> hasDifficultyBetween(DifficultyLevel min, DifficultyLevel max) {
         return (root, query, cb) -> {
-            Path<Integer> levelPath = root.get("currentDifficulty").get("levelValue");
+            Path<DifficultyLevel> levelPath = root.get("currentDifficulty");
             return cb.between(levelPath, min, max);
         };
     }
