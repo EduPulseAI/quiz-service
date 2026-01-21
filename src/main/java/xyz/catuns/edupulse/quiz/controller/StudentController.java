@@ -44,7 +44,7 @@ public class StudentController {
     public ResponseEntity<StudentResponse> getStudentByName(
             @PathVariable("name") String studentName
     ){
-    StudentResponse response = studentService.getStudentByName(studentName);
+        StudentResponse response = studentService.getStudentByName(studentName);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

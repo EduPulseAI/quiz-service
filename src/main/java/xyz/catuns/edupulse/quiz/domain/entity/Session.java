@@ -41,6 +41,4 @@ public class Session extends BaseEntity {
     @Column(name = "status")
     private SessionEventType status;
 
-
-
 }

@@ -24,8 +24,11 @@ spring:
     name: quiz-service
   data:
     redis:
-      port: ${REDIS_PORT:6379}
       host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL_ENABLED:false}
   datasource:
     password: ${DATABASE_PASSWORD:password}
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:quiz_service}
