@@ -1,59 +1,76 @@
 package xyz.catuns.edupulse.quiz.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import xyz.catuns.edupulse.common.messaging.events.quiz.QuizAnswer;
 import xyz.catuns.edupulse.quiz.domain.dto.quiz.SubmitAnswerRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.quiz.SubmitAnswerResponse;
-import xyz.catuns.edupulse.quiz.domain.entity.Question;
+import xyz.catuns.edupulse.quiz.domain.entity.AnswerChoice;
+import xyz.catuns.edupulse.quiz.domain.entity.Session;
 import xyz.catuns.edupulse.quiz.domain.entity.StudentProgress;
 import xyz.catuns.edupulse.quiz.domain.entity.StudentProgressId;
 import xyz.catuns.edupulse.quiz.domain.mapper.QuizMapper;
-import xyz.catuns.edupulse.quiz.domain.repository.QuestionRepository;
+import xyz.catuns.edupulse.quiz.domain.repository.SessionRepository;
 import xyz.catuns.edupulse.quiz.domain.repository.StudentProgressRepository;
 import xyz.catuns.edupulse.quiz.messaging.producer.QuizEventProducer;
 import xyz.catuns.edupulse.quiz.service.QuizService;
-import xyz.catuns.spring.base.exception.controller.NotFoundException;
+import xyz.catuns.spring.base.exception.controller.BadRequestException;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuizServiceImpl implements QuizService {
 
     private final RedisTemplate<String, Long> redisTemplate;
-    private final QuestionRepository questionRepository;
+    private final SessionRepository sessionRepository;
     private final StudentProgressRepository studentProgressRepository;
     private final QuizMapper quizMapper;
     private final QuizEventProducer quizEventProducer;
 
     @Override
     public SubmitAnswerResponse submitAnswer(SubmitAnswerRequest request) {
-        // fetch question
-        Question question = questionRepository.findById(request.questionId())
-                .orElseThrow(() -> new NotFoundException("No question with id"));
+        // fetch session
+        Session session = sessionRepository.findById(request.sessionId())
+                .orElseThrow(() -> new BadRequestException("No session matching id " + request.sessionId()));
 
-        boolean isCorrect = question.getCorrectAnswer().getId()
-                .equals(request.answerId());
-        long attempts = incrementAttempt(request.studentId(), question.getId());
+        if (session.getCurrentQuestion() == null) {
+            throw new BadRequestException("No current question found");
+        }
+
+        AnswerChoice answerChoice = session.getCurrentQuestion().getAnswerChoices().stream()
+                .filter(a -> a.getId().equals(request.answerId()))
+                .findFirst()
+                .orElseThrow(() -> new BadRequestException("Invalid answer choice for question"));
+
+        int attempts = incrementAttempt(session.getStudentId(), session.getCurrentQuestion().getId()).intValue();
+        long timeSpentMs = Duration.between(Instant.now(), session.getUpdatedAt()).toMillis();
 
         // publish event
-        QuizAnswer quizAnswer = quizMapper.toQuizAnswerEvent(
-                request,
-                question,
-                isCorrect,
-                attempts);
+        QuizAnswer quizAnswer = quizMapper.buildQuizAnswerEvent(
+                session,
+                answerChoice,
+                attempts,
+                timeSpentMs
+        );
         quizEventProducer.publishQuizAnswerEvent(quizAnswer);
 
+        log.debug("Published answer (attempt {}) for session {}",
+                quizAnswer.getAttemptNumber(),
+                quizAnswer.getEnvelope().getSessionId());
+
         updateStudentProgress(
-                request.studentId(),
-                question.getTopic().getId(),
-                isCorrect);
+                session.getStudentId(),
+                session.getCurrentQuestion().getTopic().getId(),
+                session.getCurrentQuestion().isCorrect(request.answerId())
+        );
 
-
-        return quizMapper.toResponse(quizAnswer, question);
+        return quizMapper.toResponse(quizAnswer, session.getCurrentQuestion());
     }
 
     private void updateStudentProgress(UUID studentId, UUID topicId, boolean isCorrect) {

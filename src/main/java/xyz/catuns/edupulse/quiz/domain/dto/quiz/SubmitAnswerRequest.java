@@ -4,9 +4,6 @@ import java.util.UUID;
 
 public record SubmitAnswerRequest(
         UUID sessionId,
-        UUID studentId,
-        UUID questionId,
-        UUID answerId,
-        Long timeSpent
+        UUID answerId
 ) {
 }

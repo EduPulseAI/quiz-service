@@ -10,6 +10,7 @@ public record QuestionResponse(
         String text,
         DifficultyLevel difficulty,
         List<AnswerChoiceResponse> choices,
+        String explanation,
         String tag
 ) {
 }

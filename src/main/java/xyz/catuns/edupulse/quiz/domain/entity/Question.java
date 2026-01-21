@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import static jakarta.persistence.CascadeType.*;
 
@@ -60,6 +61,10 @@ public class Question extends BaseEntity {
         }
 
         this.correctAnswer = answerChoice;
+    }
+
+    public boolean isCorrect(UUID answerChoiceId) {
+        return this.correctAnswer.getId().equals(answerChoiceId);
     }
 
 }

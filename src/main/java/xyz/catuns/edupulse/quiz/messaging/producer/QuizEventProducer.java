@@ -1,6 +1,7 @@
 package xyz.catuns.edupulse.quiz.messaging.producer;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -10,6 +11,7 @@ import xyz.catuns.edupulse.common.messaging.events.quiz.QuizAnswerKey;
 import xyz.catuns.edupulse.common.messaging.events.session.SessionEvent;
 import xyz.catuns.edupulse.common.messaging.events.session.SessionEventKey;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class QuizEventProducer {

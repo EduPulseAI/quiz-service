@@ -2,15 +2,14 @@ package xyz.catuns.edupulse.quiz.domain.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.springframework.beans.factory.annotation.Value;
 import xyz.catuns.edupulse.common.messaging.events.EventEnvelope;
 import xyz.catuns.edupulse.common.messaging.events.quiz.QuizAnswer;
 import xyz.catuns.edupulse.common.messaging.events.quiz.QuizContext;
-import xyz.catuns.edupulse.quiz.domain.dto.quiz.SubmitAnswerRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.quiz.SubmitAnswerResponse;
 import xyz.catuns.edupulse.quiz.domain.entity.AnswerChoice;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
+import xyz.catuns.edupulse.quiz.domain.entity.Session;
 
 import java.time.Instant;
 import java.util.List;
@@ -31,36 +30,30 @@ public abstract class QuizMapper {
     private String applicationName;
 
 
-    @Named("buildEventEnvelope")
-    protected EventEnvelope.Builder buildEventEnvelope() {
+    public EventEnvelope.Builder buildEventEnvelope(Session session) {
         return EventEnvelope.newBuilder()
                 .setId(UUID.randomUUID().toString())
                 .setSource(applicationName)
-                .setTimestamp(Instant.now());
+                .setTimestamp(Instant.now())
+                .setSessionId(session.getId().toString())
+                .setStudentId(session.getStudentId().toString());
     }
 
-    public QuizAnswer toQuizAnswerEvent(SubmitAnswerRequest request, Question question, boolean isCorrect, long attempts) {
-        String answer = question.getAnswerChoices().stream()
-                .filter(a -> a.getId().equals(request.answerId()))
-                .map(AnswerChoice::getValue)
-                .findFirst()
-                .orElse("");
+    public QuizAnswer buildQuizAnswerEvent(Session session, AnswerChoice answerChoice, int attempts, long timeSpent) {
         return QuizAnswer.newBuilder()
-                .setQuestionId(question.getId().toString())
-                .setSkillTag(buildSkillTag(question))
-                .setDifficultyLevel(question.getDifficultyLevel().getLevelValue())
-                .setIsCorrect(isCorrect)
-                .setAnswer(answer)
-                .setAttemptNumber((int) attempts)
-                .setTimeSpentMs(request.timeSpent())
+                .setQuestionId(session.getCurrentQuestion().getId().toString())
+                .setSkillTag(buildSkillTag(session.getCurrentQuestion()))
+                .setDifficultyLevel(session.getCurrentQuestion().getDifficultyLevel().getLevelValue())
+                .setIsCorrect(answerChoice.isCorrect())
+                .setAnswer(answerChoice.getValue())
+                .setAttemptNumber(attempts)
+                .setTimeSpentMs(timeSpent)
                 .setContextualData(QuizContext.newBuilder()
                         .setHintsUsed(0)
                         .setPreviousAnswers(List.of())
                         .build())
-                .setEnvelope(buildEventEnvelope()
+                .setEnvelope(buildEventEnvelope(session)
                         .setType("quiz.answered")
-                        .setSessionId(request.sessionId().toString())
-                        .setStudentId(request.studentId().toString())
                         .build())
                 .build();
     }
