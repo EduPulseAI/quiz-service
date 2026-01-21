@@ -14,24 +14,24 @@ public interface QuestionRepository extends JpaRepository<Question, UUID>, JpaSp
 
     @Query(value = """
             SELECT * FROM questions
-        WHERE topic_id = :topicId 
-        ORDER BY RANDOM() 
-        LIMIT 1
-        """, nativeQuery = true)
+            WHERE topic_id = :topicId
+            ORDER BY RANDOM()
+            LIMIT 1
+            """, nativeQuery = true)
     Optional<Question> findRandomByTopicId(@Param("topicId") UUID topicId);
 
     @Query(value = """
             SELECT * FROM questions
-            WHERE topic = :topic
+            WHERE topic_id = :topicId
             AND difficulty_level = :difficulty
-            AND question_id NOT IN :recentIds
+            AND id NOT IN :recentIds
             ORDER BY RANDOM()
             LIMIT 1
             """, nativeQuery = true)
     Optional<Question> findNextQuestion(
             @Param("topicId") UUID topicId,
             @Param("difficulty") int difficulty,
-            @Param("recentIds") List<String> recentIds
+            @Param("recentIds") List<UUID> recentIds
     );
 
 

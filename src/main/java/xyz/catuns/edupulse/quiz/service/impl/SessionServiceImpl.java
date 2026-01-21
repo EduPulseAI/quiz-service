@@ -1,9 +1,11 @@
 package xyz.catuns.edupulse.quiz.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import xyz.catuns.edupulse.common.messaging.events.session.SessionEvent;
+import xyz.catuns.edupulse.common.messaging.events.session.SessionEventType;
 import xyz.catuns.edupulse.quiz.domain.dto.session.*;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
 import xyz.catuns.edupulse.quiz.domain.entity.Session;
@@ -20,6 +22,7 @@ import xyz.catuns.spring.base.exception.controller.NotFoundException;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SessionServiceImpl implements SessionService {
@@ -34,18 +37,27 @@ public class SessionServiceImpl implements SessionService {
 
     @Override
     public StartSessionResponse startSession(StartSessionRequest request) {
-        // Fetch Topic
-        Topic topic = topicRepository.findById(request.topicId())
-                .orElseThrow(() -> new NotFoundException("No skill tag with id %s"
-                        .formatted(request.topicId())));
+        Session session;
+        List<Session> activeSessions = repository.findActiveByStudentIdAndTopicId(request.studentId(), request.topicId());
+        if (!activeSessions.isEmpty()) {
+            log.debug("Found existing sessions");
+            session = activeSessions.getFirst();
+            session.setStatus(SessionEventType.RESUMED);
+        } else {
+            // Fetch Topic
+            Topic topic = topicRepository.findById(request.topicId())
+                    .orElseThrow(() -> new NotFoundException("No skill tag with id %s"
+                            .formatted(request.topicId())));
 
-        // Fetch First question
-        Question firstQuestion = questionRepository.findRandomByTopicId(request.topicId())
-                .orElseThrow(() -> new NotFoundException("No question found for skill %s"
-                        .formatted(topic.getSkill())));
+            // Fetch First question
+            Question firstQuestion = questionRepository.findRandomByTopicId(request.topicId())
+                    .orElseThrow(() -> new NotFoundException("No question found for skill %s"
+                            .formatted(topic.getSkill())));
 
-        // Create session entity
-        Session session = mapper.toEntity(request, firstQuestion);
+            // Create session entity
+            session = mapper.toEntity(request, firstQuestion);
+        }
+
         session = repository.save(session);
 
         // send session event

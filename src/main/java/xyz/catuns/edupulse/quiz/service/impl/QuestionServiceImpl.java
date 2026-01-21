@@ -35,12 +35,17 @@ public class QuestionServiceImpl implements QuestionService {
         // Get recent question ids from redis
         String key = "recent_questions:" + session.getStudentId();
 
-        List<String> recentIds = redis.opsForList()
+        List<String> recentStrIds = redis.opsForList()
                 .range(key, 0, -1);
 
         Question lastQuestion = session.getCurrentQuestion();
-        if (recentIds == null || recentIds.isEmpty()) {
-            recentIds = List.of(lastQuestion.getId().toString());
+        List<UUID> recentIds;
+        if (recentStrIds == null || recentStrIds.isEmpty()) {
+            recentIds = List.of(lastQuestion.getId());
+        } else {
+            recentIds = recentStrIds.stream()
+                    .map(UUID::fromString)
+                    .toList();
         }
 
         Question nextQuestion = findNextQuestion(
@@ -61,7 +66,7 @@ public class QuestionServiceImpl implements QuestionService {
         return questionMapper.toResponse(nextQuestion);
     }
 
-    private Question findNextQuestion(Topic topic, DifficultyLevel difficultyLevel, List<String> recentIds) {
+    private Question findNextQuestion(Topic topic, DifficultyLevel difficultyLevel, List<UUID> recentIds) {
         return questionRepository
                 .findNextQuestion(
                         topic.getId(),
