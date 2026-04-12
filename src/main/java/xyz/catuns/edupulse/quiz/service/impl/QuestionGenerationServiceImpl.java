@@ -1,20 +1,19 @@
 package xyz.catuns.edupulse.quiz.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.metadata.ChatResponseMetadata;
-import org.springframework.ai.chat.metadata.Usage;
-import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import xyz.catuns.edupulse.quiz.domain.dto.question.GenerateQuestionsRequest;
 import xyz.catuns.edupulse.quiz.domain.dto.question.GenerateQuestionsResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.question.QuestionResponse;
+import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestion;
 import xyz.catuns.edupulse.quiz.domain.dto.question.gemini.GeminiQuestionResponse;
 import xyz.catuns.edupulse.quiz.domain.dto.topic.TopicResponse;
 import xyz.catuns.edupulse.quiz.domain.entity.Question;
@@ -23,11 +22,8 @@ import xyz.catuns.edupulse.quiz.domain.mapper.QuestionMapper;
 import xyz.catuns.edupulse.quiz.domain.mapper.TopicMapper;
 import xyz.catuns.edupulse.quiz.domain.repository.QuestionRepository;
 import xyz.catuns.edupulse.quiz.domain.repository.TopicRepository;
-import xyz.catuns.edupulse.quiz.exception.GeminiGenerationException;
 import xyz.catuns.edupulse.quiz.service.QuestionGenerationService;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,10 +36,15 @@ import java.util.stream.Collectors;
 public class QuestionGenerationServiceImpl implements QuestionGenerationService {
 
     private final ChatClient chatClient;
-    private final PromptTemplate promptTemplate;
+
+    @Value("classpath:prompts/question-generation.st")
+    private Resource questionGenerationPromptResource;
+
+    /* repos */
     private final QuestionRepository questionRepository;
     private final TopicRepository topicRepository;
-    private final ObjectMapper objectMapper;
+
+    /* mappers */
     private final QuestionMapper questionMapper;
     private final TopicMapper topicMapper;
 
@@ -54,14 +55,15 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
                 request.topic(), Thread.currentThread().getName());
 
         try {
-            // Generate questions from AI
+            // Generate questions
             GeminiQuestionResponse geminiResponse = generateQuestionsFromAI(request);
 
             // Persist to database
-            List<Question> persistedQuestions = persistQuestions(geminiResponse);
+            Topic topic = findOrCreateTopic(geminiResponse.topic().skill());
+            List<Question> persistedQuestions = persistQuestions(geminiResponse.questions(), topic);
 
             // Map to response DTO
-            GenerateQuestionsResponse response = mapToResponse(persistedQuestions);
+            GenerateQuestionsResponse response = mapToResponse(persistedQuestions, topic);
 
             return CompletableFuture.completedFuture(response);
 
@@ -71,13 +73,10 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
         }
     }
 
-    private GenerateQuestionsResponse mapToResponse(List<Question> questions) {
+    private GenerateQuestionsResponse mapToResponse(List<Question> questions, Topic topic) {
         if (questions.isEmpty()) {
             throw new IllegalStateException("No questions were generated");
         }
-
-        // Get skill tag from first question (all share the same skill tag)
-        Topic topic = questions.getFirst().getTopic();
 
         TopicResponse topicDto = topicMapper.toResponse(topic);
 
@@ -86,14 +85,11 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
         return new GenerateQuestionsResponse(topicDto, questionResponses);
     }
 
-    private List<Question> persistQuestions(GeminiQuestionResponse geminiResponse) {
-        log.debug("Persisting {} questions to database", geminiResponse.questions().size());
-
-        // Find or create skill tag
-        Topic topic = findOrCreateTopic(geminiResponse.topic().skill());
+    private List<Question> persistQuestions(List<GeminiQuestion> geminiQuestions, Topic topic) {
+        log.debug("Persisting {} questions to database", geminiQuestions.size());
 
         // Map and persist questions
-        List<Question> questions = geminiResponse.questions().stream()
+        List<Question> questions = geminiQuestions.stream()
                 .map(q -> questionMapper.toEntity(q, topic))
                 .collect(Collectors.toList());
 
@@ -109,55 +105,23 @@ public class QuestionGenerationServiceImpl implements QuestionGenerationService 
                 });
     }
 
-    private GeminiQuestionResponse generateQuestionsFromAI(GenerateQuestionsRequest request) throws JsonProcessingException {
-        // Create output converter for structured JSON response
-        BeanOutputConverter<GeminiQuestionResponse> outputConverter =
-                new BeanOutputConverter<>(GeminiQuestionResponse.class);
-
+    private GeminiQuestionResponse generateQuestionsFromAI(GenerateQuestionsRequest request) {
         // Build prompt parameters
-        Map<String, Object> promptParams = buildPromptParameters(request, outputConverter);
+        PromptTemplate promptTemplate = new PromptTemplate(questionGenerationPromptResource);
+        Map<String, Object> promptParams = buildPromptParameters(request);
 
-        // Create and populate prompt template
-
-        log.debug("Calling Vertex AI Gemini with prompt for {} questions", request.questionCount());
-
-        // Call Vertex AI Gemini
-        Instant start = Instant.now();
-        ChatResponse chatResponse = chatClient.prompt()
+        return  chatClient.prompt()
                 .user(userSpec -> userSpec.text(promptTemplate.render(promptParams)))
                 .call()
-                .chatResponse();
-
-        long runtimeSeconds = Duration.between(start, Instant.now())
-                .toSeconds();
-        String response = chatResponse.getResult().getOutput().getText();
-
-        // Track tokens
-        ChatResponseMetadata metadata = chatResponse.getMetadata();// Or chatResp.getResult().getMetadata()
-        Usage usage = metadata.getUsage();
-        log.info("Prompt tokens: {}, Completion: {}, Total: {}, Runtime {}s",
-                usage.getPromptTokens(),
-                usage.getCompletionTokens(),
-                usage.getTotalTokens(),
-                runtimeSeconds);
-
-        if (response == null || response.isBlank()) {
-            throw new GeminiGenerationException("Gemini returned empty response");
-        }
-
-        log.debug("Received response from Vertex AI, parsing structured output");
-
-        // Convert JSON response to strongly-typed object
-        return objectMapper.readValue(response, GeminiQuestionResponse.class);
+                .entity(GeminiQuestionResponse.class);
     }
 
-    private Map<String, Object> buildPromptParameters(GenerateQuestionsRequest request, BeanOutputConverter<GeminiQuestionResponse> outputConverter) {
+    private Map<String, Object> buildPromptParameters(GenerateQuestionsRequest request) {
         Map<String, Object> params = new HashMap<>();
         params.put("topic", request.topic());
         params.put("questionCount", request.questionCount());
         params.put("difficultyLevel", request.difficultyLevel().getDescription());
         params.put("existingQuestionsSection", "");
-        params.put("format", outputConverter.getFormat());
 
         // Conditional course context section
         if (request.courseContext() != null && !request.courseContext().isBlank()) {
